@@ -387,3 +387,57 @@ def test_exp_with_run_from_other_experiment(mlflow_context):
     runs2 = client2.search_runs(exp2.experiment_id)
     assert len(runs2) == 1
     compare_runs(mlflow_context, run1a, runs2[0])
+
+
+# == Test skip_download_run_artifacts
+
+def test_exp_skip_download_artifacts(mlflow_context):
+    """Test exporting experiment with skip_download_run_artifacts - artifacts should not be downloaded but artifact_uri should be preserved"""
+    import os
+    import json
+    
+    init_output_dirs(mlflow_context.output_dir)
+    exp1, run1 = create_simple_run(mlflow_context.client_src)
+    run1 = mlflow_context.client_src.get_run(run1.info.run_id)
+    
+    # Export with skip_download_run_artifacts=True
+    export_experiment(
+        mlflow_client = mlflow_context.client_src,
+        experiment_id_or_name = exp1.name,
+        output_dir = mlflow_context.output_dir,
+        skip_download_run_artifacts = True
+    )
+    
+    # Check that artifacts directory was not created
+    artifacts_dir = os.path.join(mlflow_context.output_dir, f"runs/{run1.info.run_id}/artifacts")
+    assert not os.path.exists(artifacts_dir), f"Artifacts directory should not exist when skip_download_run_artifacts=True"
+    
+    # Check that run.json still contains artifact_uri
+    run_json_path = os.path.join(mlflow_context.output_dir, f"runs/{run1.info.run_id}/run.json")
+    assert os.path.exists(run_json_path), "run.json should exist"
+    
+    with open(run_json_path, "r", encoding="utf-8") as f:
+        run_data = json.load(f)
+    
+    assert "mlflow" in run_data, "run.json should contain mlflow section"
+    assert "info" in run_data["mlflow"], "run.json should contain info section"
+    assert "artifact_uri" in run_data["mlflow"]["info"], "run.json should contain artifact_uri"
+    assert run_data["mlflow"]["info"]["artifact_uri"] != "", "artifact_uri should not be empty"
+    
+    # Import the run (should work even without artifacts)
+    dst_exp_name = mk_dst_experiment_name(exp1.name)
+    import_experiment(
+        mlflow_client = mlflow_context.client_dst,
+        experiment_name = dst_exp_name,
+        input_dir = mlflow_context.output_dir
+    )
+    
+    exp2 = mlflow_context.client_dst.get_experiment_by_name(dst_exp_name)
+    runs2 = mlflow_context.client_dst.search_runs(exp2.experiment_id)
+    assert len(runs2) == 1, f"Expected 1 run, got {len(runs2)}"
+    run2 = runs2[0]
+    
+    # Verify basic run properties (excluding artifacts)
+    assert run1.info.run_name == run2.info.run_name
+    assert run1.data.params == run2.data.params
+    assert len(run1.data.metrics) == len(run2.data.metrics)

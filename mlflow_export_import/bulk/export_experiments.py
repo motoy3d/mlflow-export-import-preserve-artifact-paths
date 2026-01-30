@@ -18,7 +18,8 @@ from mlflow_export_import.common.click_options import (
     opt_run_start_time,
     opt_until,
     opt_export_deleted_runs,
-    opt_use_threads
+    opt_use_threads,
+    opt_skip_download_run_artifacts
 )
 from mlflow_export_import.common import MlflowExportImportException
 from mlflow_export_import.common import utils, io_utils, mlflow_utils
@@ -36,6 +37,7 @@ def export_experiments(
         runs_until = None,
         export_deleted_runs = False,
         notebook_formats = None,
+        skip_download_run_artifacts = False,
         use_threads = False,
         logged_models_filter = None,
         mlflow_client = None
@@ -47,6 +49,7 @@ def export_experiments(
       - List of experiment IDs
       - Dictionary whose key is an experiment id and the value is a list of its run IDs
       - String with comma-delimited experiment names or IDs such as 'sklearn_wine,sklearn_iris' or '1,2'
+    :param skip_download_run_artifacts: Skip downloading run artifacts. Useful when artifacts are in shared storage (e.g., S3).
     :return: Dictionary of summary information
     """
 
@@ -96,6 +99,7 @@ def export_experiments(
                 runs_until,
                 export_deleted_runs,
                 run_ids,
+                skip_download_run_artifacts,
                 logged_models_filter
             )
             futures.append(future)
@@ -122,6 +126,7 @@ def export_experiments(
             "runs_until": runs_until,
             "export_deleted_runs": export_deleted_runs,
             "notebook_formats": notebook_formats,
+            "skip_download_run_artifacts": skip_download_run_artifacts,
             "use_threads": use_threads
         },
         "status": {
@@ -156,7 +161,7 @@ def export_experiments(
 
 
 def _export_experiment(mlflow_client, exp_id_or_name, output_dir, export_permissions, notebook_formats, export_results,
-        run_start_time, runs_until, export_deleted_runs, run_ids, logged_models_filter):
+        run_start_time, runs_until, export_deleted_runs, run_ids, skip_download_run_artifacts, logged_models_filter):
     ok_runs = -1; failed_runs = -1
     exp_name = exp_id_or_name
     try:
@@ -173,6 +178,7 @@ def _export_experiment(mlflow_client, exp_id_or_name, output_dir, export_permiss
             runs_until = runs_until,
             export_deleted_runs = export_deleted_runs,
             notebook_formats = notebook_formats,
+            skip_download_run_artifacts = skip_download_run_artifacts,
             mlflow_client = mlflow_client,
             logged_models_filter = logged_models_filter
         )
@@ -222,9 +228,10 @@ class Result:
 @opt_until
 @opt_export_deleted_runs
 @opt_notebook_formats
+@opt_skip_download_run_artifacts
 @opt_use_threads
 
-def main(experiments, output_dir, export_permissions, run_start_time, runs_until, export_deleted_runs, notebook_formats, use_threads):
+def main(experiments, output_dir, export_permissions, run_start_time, runs_until, export_deleted_runs, notebook_formats, skip_download_run_artifacts, use_threads):
     _logger.info("Options:")
     for k,v in locals().items():
         _logger.info(f"  {k}: {v}")
@@ -236,6 +243,7 @@ def main(experiments, output_dir, export_permissions, run_start_time, runs_until
         runs_until = runs_until,
         export_deleted_runs = export_deleted_runs,
         notebook_formats = utils.string_to_list(notebook_formats),
+        skip_download_run_artifacts = skip_download_run_artifacts,
         use_threads = use_threads
     )
 
