@@ -333,13 +333,18 @@ Options:
                                  False]
   --run-start-time TEXT          Only export runs started after this UTC time
                                  (inclusive). Format: YYYY-MM-DD.
-  --runs-until TEXT                   Only export runs started before this UTC time
+  --runs-until TEXT              Only export runs started before this UTC time
                                  (exclusive). Use with --run-start-time to
                                  define a time window. Format: YYYY-MM-DD.
   --export-deleted-runs BOOLEAN  Export deleted runs.  [default: False]
   --notebook-formats TEXT        Databricks notebook formats. Values are
                                  SOURCE, HTML, JUPYTER or DBC (comma
                                  seperated).
+  --skip-download-run-artifacts BOOLEAN
+                                 Skip downloading run artifacts. Useful when 
+                                 artifacts are in shared storage (e.g., S3) 
+                                 and you want to preserve artifact paths 
+                                 without copying files.  [default: False]
   --use-threads BOOLEAN          Process in parallel using threads.  [default:
                                  False]
 ```

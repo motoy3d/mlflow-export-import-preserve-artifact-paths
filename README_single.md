@@ -53,7 +53,7 @@ Options:
   --run-start-time TEXT          Only export runs started after this UTC time
                                  (inclusive). Format: YYYY-MM-DD or 
                                  YYYY-MM-DD HH:MM:SS.
-  --runs-until TEXT                   Only export runs started before this UTC time
+  --runs-until TEXT              Only export runs started before this UTC time
                                  (exclusive). Use with --run-start-time to
                                  define a time window. Format: YYYY-MM-DD or
                                  YYYY-MM-DD HH:MM:SS.
@@ -64,6 +64,11 @@ Options:
   --notebook-formats TEXT        Databricks notebook formats. Values are
                                  SOURCE, HTML, JUPYTER or DBC (comma
                                  separated).
+  --skip-download-run-artifacts BOOLEAN
+                                 Skip downloading run artifacts. Useful when 
+                                 artifacts are in shared storage (e.g., S3) 
+                                 and you want to preserve artifact paths 
+                                 without copying files.  [default: False]
 ```
 
 #### Examples
@@ -128,6 +133,24 @@ export-experiment \
 ```
 
 This allows incremental exports in smaller time chunks (e.g., 4-hour intervals).
+
+##### Export experiment without downloading artifacts (preserve S3 paths):
+```
+export-experiment \
+  --experiment sklearn-wine \
+  --output-dir out \
+  --skip-download-run-artifacts True
+```
+
+This is particularly useful when:
+- Migrating between MLflow instances that share the same artifact storage (e.g., S3 bucket)
+- Artifacts are very large and you want to avoid downloading/re-uploading them
+- You want to preserve the original artifact URIs for cross-instance referencing
+
+**Important Notes:**
+- The `artifact_uri` field is always preserved in the exported JSON, even when artifacts are not downloaded
+- When importing, the run metadata will contain the original artifact paths
+- Artifacts will remain accessible if both source and destination MLflow instances have access to the same storage (e.g., S3 bucket with proper permissions)
 
 #### Databricks export examples
 
