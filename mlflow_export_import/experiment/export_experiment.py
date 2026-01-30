@@ -16,7 +16,8 @@ from mlflow_export_import.common.click_options import (
     opt_run_start_time,
     opt_until,
     opt_export_deleted_runs,
-    opt_check_nested_runs
+    opt_check_nested_runs,
+    opt_skip_download_run_artifacts
 )
 from mlflow_export_import.common.iterators import SearchRunsIterator
 from mlflow_export_import.common import utils, io_utils, mlflow_utils
@@ -44,6 +45,7 @@ def export_experiment(
         export_deleted_runs = False,
         check_nested_runs = False,
         notebook_formats = None,
+        skip_download_run_artifacts = False,
         logged_models_filter = None,
         mlflow_client = None
     ):
@@ -58,6 +60,7 @@ def export_experiment(
     :param: run_start_time - Only export runs started after this UTC time (inclusive). Format: YYYY-MM-DD or YYYY-MM-DD HH:MM:SS.
     :param: runs_until - Only export runs started before this UTC time (exclusive). Format: YYYY-MM-DD or YYYY-MM-DD HH:MM:SS.
     :param: notebook_formats: List of notebook formats to export. Values are SOURCE, HTML, JUPYTER or DBC.
+    :param: skip_download_run_artifacts: Skip downloading run artifacts. Useful when artifacts are in shared storage (e.g., S3).
     :param: logged_models_filter: filter based on run_ids under experiment
     :param: mlflow_client: MLflow client.
     :return: Number of successful and number of failed runs.
@@ -104,7 +107,7 @@ def export_experiment(
 
     for run in runs:
         _export_run(mlflow_client, run, output_dir, ok_run_ids, failed_run_ids,
-            run_start_time, run_start_time_str, runs_until, runs_until_str, export_deleted_runs, notebook_formats)
+            run_start_time, run_start_time_str, runs_until, runs_until_str, export_deleted_runs, notebook_formats, skip_download_run_artifacts)
         num_runs_exported += 1
 
     info_attr = {
@@ -162,7 +165,7 @@ def _export_run(mlflow_client, run, output_dir,
         ok_run_ids, failed_run_ids,
         run_start_time, run_start_time_str,
         runs_until, runs_until_str,
-        export_deleted_runs, notebook_formats
+        export_deleted_runs, notebook_formats, skip_download_run_artifacts
     ):
     # Skip runs outside the time window
     if (run_start_time and run.info.start_time < run_start_time) or (runs_until and run.info.start_time >= runs_until):
@@ -181,6 +184,7 @@ def _export_run(mlflow_client, run, output_dir,
         run_id = run.info.run_id,
         output_dir = os.path.join(output_dir, f'runs/{run.info.run_id}'),
         export_deleted_runs = export_deleted_runs,
+        skip_download_run_artifacts = skip_download_run_artifacts,
         notebook_formats = notebook_formats,
         mlflow_client = mlflow_client
     )
@@ -222,8 +226,9 @@ def _get_runs(mlflow_client, run_ids, exp, failed_run_ids):
 @opt_export_deleted_runs
 @opt_check_nested_runs
 @opt_notebook_formats
+@opt_skip_download_run_artifacts
 
-def main(experiment, output_dir, run_ids, export_permissions, run_start_time, runs_until, export_deleted_runs, check_nested_runs, notebook_formats):
+def main(experiment, output_dir, run_ids, export_permissions, run_start_time, runs_until, export_deleted_runs, check_nested_runs, notebook_formats, skip_download_run_artifacts):
     _logger.info("Options:")
     for k,v in locals().items():
         _logger.info(f"  {k}: {v}")
@@ -240,7 +245,8 @@ def main(experiment, output_dir, run_ids, export_permissions, run_start_time, ru
         runs_until = runs_until,
         export_deleted_runs = export_deleted_runs,
         check_nested_runs = check_nested_runs,
-        notebook_formats = utils.string_to_list(notebook_formats)
+        notebook_formats = utils.string_to_list(notebook_formats),
+        skip_download_run_artifacts = skip_download_run_artifacts
     )
 
 

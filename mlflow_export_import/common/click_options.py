@@ -113,6 +113,15 @@ def opt_check_nested_runs(function):
     )(function)
     return function
 
+def opt_skip_download_run_artifacts(function):
+    function = click.option("--skip-download-run-artifacts",
+        help="Skip downloading run artifacts. Useful when artifacts are in shared storage (e.g., S3) and you want to preserve artifact paths without copying files.",
+        type=bool,
+        default=False,
+        show_default=True
+    )(function)
+    return function
+
 # == import
 
 def opt_input_dir(function):
