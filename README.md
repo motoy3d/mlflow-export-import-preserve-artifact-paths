@@ -59,6 +59,8 @@ See [README_governance](README_governance.md).
 
 MLflow Export Import supports seamless migration of MLflow objects between various SageMaker MLflow environments and other MLflow tracking servers.
 
+For a detailed guide on migrating between SageMaker MLflow instances while preserving S3 artifact paths, see [SageMaker Migration Guide](README_sagemaker_migration.md).
+
 <p align="center"><img src="diagrams/SageMaker_MLflow_App_Architecture.png" width="900" height="600"/></p>
 <p align="center">Figure 1: Migration to SageMaker MLflow App</p>
 
@@ -301,6 +303,7 @@ See [tests/README](tests/README.md) for details.
 * [README_options.md](README_options.md)
 * [README_export_format.md](README_export_format.md)
 * [README_governance.md](README_governance.md)
+* [README_sagemaker_migration.md](README_sagemaker_migration.md) - **Guide for SageMaker MLflow migration with preserved S3 artifacts**
 * [tests/README.md](tests/README.md)
   * [tests/open_source/README.md](tests/open_source/README.md)
   * [tests/databricks/README.md](tests/databricks/README.md)
